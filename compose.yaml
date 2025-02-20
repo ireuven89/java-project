@@ -1,0 +1,48 @@
+version: api/v1
+
+
+services:
+  school:
+    image: school
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: school
+    healthcheck:
+      test: ping actuator/health
+    depends_on:
+      mysql:
+        condition: service_healthy
+  mysql:
+    image: mysql:latest
+    healthcheck:
+      test: ping
+  users-db:
+    image: mongo
+    container_name: mongo-users
+    healthcheck:
+      test: mongosh localhost:27017/test --quiet || exit 1
+    ports:
+      - "27017:27017"
+  items-db:
+    image: mysql
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u root --password=${MYSQL_ROOT_PASSWORD}
+  mongo:
+    image: mongo:latest
+    container_name: mongo-tests
+    healthcheck:
+      test: mongosh localhost:27017/test --quiet || exit 1
+      interval: 10s
+      timeout: 1m
+      retries: 3
+      start_period: 5s
+    ports:
+      - "27017:27017"
+    volumes:
+      - /var/lib/mongo
+    environment:
+      - MONGO_URL=${MONGO_URL}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+
+
