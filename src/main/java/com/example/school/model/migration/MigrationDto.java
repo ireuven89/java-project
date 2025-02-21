@@ -8,4 +8,6 @@ public class MigrationDto {
     private String migrationName;
     private String queueName;
     private String migrationStatus;
+    private long totalTaskCount;
+    private long totalTaskCompletedCount;
 }

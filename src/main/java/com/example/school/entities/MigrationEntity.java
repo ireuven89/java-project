@@ -21,6 +21,4 @@ public class MigrationEntity {
     private long totalTasksCount = 0;
     private long totalTasksCompleted = 0;
     private long timeLeft;
-    private long totalTasksLeft;
-
 }

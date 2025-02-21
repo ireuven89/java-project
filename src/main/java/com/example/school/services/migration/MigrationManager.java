@@ -6,7 +6,6 @@ import com.example.school.model.migration.MigrationStatusDto;
 import com.example.school.model.migration.MigrationStatusEnum;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 @Service
 public class MigrationManager {
@@ -16,33 +15,27 @@ public class MigrationManager {
     private final ModelMapper modelMapper = new ModelMapper();
 
 
-    @Async
-    public void startMigration(String migrationName) {
+    public void startMigration(String migrationName) throws Exception{
         MigrationEntity entity = migrationService.getMigrationEntity(migrationName);
 
-        migrationService.updateMigration(migrationName, MigrationStatusEnum.IN_PROGRESS);
+        if(entity == null){
+            throw new ResourceNotFoundException("Migration not found", migrationName);
+        }
+
+        migrationService.updateMigration(migrationName, "status", MigrationStatusEnum.IN_PROGRESS.getValue());
 
         migrationService.processTasks(entity.getMigrationName(), entity.getQueueName());
     }
 
     public void createMigration(MigrationDto migrationDto) {
-        MigrationEntity entity = new MigrationEntity();
 
-        entity.setMigrationName(migrationDto.getMigrationName());
-        entity.setQueueName(migrationDto.getQueueName());
-        entity.setStatus(MigrationStatusEnum.PENDING.getValue());
-        entity.setTotalTasksCount(0);
-        entity.setTotalTasksCompleted(0);
-        entity.setTimeLeft(0);
-        entity.setTotalTasksLeft(0);
-
-       migrationService.migrationsMongoTemplate.save(entity);
+       migrationService.createMigration(migrationDto);
     }
 
     public MigrationStatusDto getMigrationStatus(String name) throws Exception {
          MigrationEntity migrationEntity = migrationService.getMigrationEntity(name);
 
-        if (migrationEntity.getId() == null) {
+        if (migrationEntity == null) {
             throw new ResourceNotFoundException("migration not found");
         }
 
@@ -59,6 +52,6 @@ public class MigrationManager {
             throw new ResourceNotFoundException("migration not found", name);
         }
 
-        migrationService.updateMigration(name, MigrationStatusEnum.STOPPED);
+        migrationService.updateMigration(name, "status", MigrationStatusEnum.STOPPED.getValue());
     }
 }
